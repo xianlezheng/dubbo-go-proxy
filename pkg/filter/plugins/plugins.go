@@ -19,7 +19,6 @@ package plugins
 
 import (
 	"errors"
-	"github.com/dubbogo/dubbo-go-proxy/pkg/filter"
 	"plugin"
 	"strings"
 )
@@ -28,24 +27,30 @@ import (
 	"github.com/dubbogo/dubbo-go-proxy/pkg/common/constant"
 	"github.com/dubbogo/dubbo-go-proxy/pkg/config"
 	"github.com/dubbogo/dubbo-go-proxy/pkg/context"
+	"github.com/dubbogo/dubbo-go-proxy/pkg/filter"
 	"github.com/dubbogo/dubbo-go-proxy/pkg/logger"
 )
 
 var (
-	apiUrlWithPluginsMap = make(map[string]context.FilterChain)
+	apiURLWithPluginsMap = make(map[string]context.FilterChain)
 	groupWithPluginsMap  = make(map[string]map[string]PluginsWithFunc)
-	emptyPluginConfigErr = errors.New("Empty plugin config")
+	errEmptyPluginConfig = errors.New("Empty plugin config")
 )
 
-// single plugin details
+// PluginsWithFunc is a single plugin details
 type PluginsWithFunc struct {
 	Name     string
 	Priority int
 	fn       context.FilterFunc
 }
 
-// Prase api_config.yaml(pluginsGroup) to map[string][]PluginsWithFunc
-func InitPluginsGroup(groups []config.PluginsGroup,filePath string) {
+// InitPluginsGroup prase api_config.yaml(pluginsGroup) to map[string][]PluginsWithFunc
+func InitPluginsGroup(groups []config.PluginsGroup, filePath string) {
+
+	if "" == filePath || len(groups) == 0 {
+		return
+	}
+
 	// load file.so
 	pls, err := plugin.Open(filePath)
 	if nil != err {
@@ -57,7 +62,7 @@ func InitPluginsGroup(groups []config.PluginsGroup,filePath string) {
 
 		// trans to context.FilterFunc
 		for _, pl := range group.Plugins {
-			pwf := PluginsWithFunc{pl.Name, pl.Priority, loadExternalPlugin(&pl,pls)}
+			pwf := PluginsWithFunc{pl.Name, pl.Priority, loadExternalPlugin(&pl, pls)}
 			pwdMap[pl.Name] = pwf
 		}
 
@@ -65,12 +70,12 @@ func InitPluginsGroup(groups []config.PluginsGroup,filePath string) {
 	}
 }
 
-// must behind InitPluginsGroup call
-func InitApiUrlWithFilterChain(resources []config.Resource) {
-	pairUrlWithFilterChain("",resources,context.FilterChain{})
+// InitApiUrlWithFilterChain must behind InitPluginsGroup call
+func InitAPIURLWithFilterChain(resources []config.Resource) {
+	pairURLWithFilterChain("", resources, context.FilterChain{})
 }
 
-func pairUrlWithFilterChain(parentPath string,resources []config.Resource,parentFilterFuncs []context.FilterFunc){
+func pairURLWithFilterChain(parentPath string, resources []config.Resource, parentFilterFuncs []context.FilterFunc) {
 
 	if len(resources) == 0 {
 		return
@@ -81,34 +86,35 @@ func pairUrlWithFilterChain(parentPath string,resources []config.Resource,parent
 		groupPath = ""
 	}
 
-	for _,resource := range resources {
+	for _, resource := range resources {
 		fullPath := groupPath + resource.Path
 		if !strings.HasPrefix(resource.Path, constant.PathSlash) {
 			continue
 		}
 
-		currentFuncArr :=  getApiFilterFuncsWithPluginsGroup(&resource.Plugins)
+		currentFuncArr := getApiFilterFuncsWithPluginsGroup(&resource.Plugins)
 
 		if len(currentFuncArr) > 0 {
-			apiUrlWithPluginsMap[fullPath] = currentFuncArr
+			apiURLWithPluginsMap[fullPath] = currentFuncArr
 			parentFilterFuncs = currentFuncArr
 		} else {
 			if len(parentFilterFuncs) > 0 {
-				apiUrlWithPluginsMap[fullPath] = parentFilterFuncs
+				apiURLWithPluginsMap[fullPath] = parentFilterFuncs
 			}
 		}
 
 		if len(resource.Resources) > 0 {
-			pairUrlWithFilterChain(resource.Path,resource.Resources,parentFilterFuncs)
+			pairURLWithFilterChain(resource.Path, resource.Resources, parentFilterFuncs)
 		}
 	}
 
 }
 
-func GetApiFilterFuncsWithApiUrl(url string) context.FilterChain {
+// GetAPIFilterFuncsWithAPIURL is get filterchain with path
+func GetAPIFilterFuncsWithAPIURL(url string) context.FilterChain {
 	// found from cache
-	if funcs, found := apiUrlWithPluginsMap[url]; found {
-		logger.Debugf("GetExternalPlugins is:%v,len:%d", funcs,len(funcs))
+	if funcs, found := apiURLWithPluginsMap[url]; found {
+		logger.Debugf("GetExternalPlugins is:%v,len:%d", funcs, len(funcs))
 		return funcs
 	}
 
@@ -116,7 +122,7 @@ func GetApiFilterFuncsWithApiUrl(url string) context.FilterChain {
 	return context.FilterChain{}
 }
 
-func loadExternalPlugin(p *config.Plugin,pl *plugin.Plugin) context.FilterFunc {
+func loadExternalPlugin(p *config.Plugin, pl *plugin.Plugin) context.FilterFunc {
 	if nil != p {
 		logger.Infof("loadExternalPlugin name is :%s,version:%s,Priority:%d", p.Name, p.Version, p.Priority)
 		sb, err := pl.Lookup(p.ExternalLookupName)
@@ -125,11 +131,11 @@ func loadExternalPlugin(p *config.Plugin,pl *plugin.Plugin) context.FilterFunc {
 		}
 
 		sbf := sb.(func() filter.Filter)
-		logger.Infof("loadExternalPlugin %s sucess", p.Name)
+		logger.Infof("loadExternalPlugin %s success", p.Name)
 		return sbf().Do()
 	}
 
-	panic(emptyPluginConfigErr)
+	panic(errEmptyPluginConfig)
 }
 
 func getApiFilterFuncsWithPluginsGroup(plu *config.PluginsInUse) []context.FilterFunc {

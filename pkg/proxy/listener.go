@@ -59,7 +59,7 @@ func (l *ListenerService) Start() {
 	case model.HTTP:
 		l.httpListener()
 	default:
-		panic("un support protocol start: " + l.Address.SocketAddress.ProtocolStr)
+		panic("unsupported protocol start: " + l.Address.SocketAddress.ProtocolStr)
 	}
 }
 
@@ -72,8 +72,8 @@ func (l *ListenerService) httpListener() {
 	// user customize http config
 	var hc model.HttpConfig
 	if l.Config != nil {
-		if c, ok := l.Config.(model.HttpConfig); ok {
-			hc = c
+		if c, ok := l.Config.(*model.HttpConfig); ok {
+			hc = *c
 		}
 	}
 
@@ -134,8 +134,6 @@ func (s *DefaultHttpListener) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	hc.ResetWritermen(w)
 	hc.Reset()
 
-	hc.AppendFilterFunc()
-
 	api, err := s.routeRequest(hc, r)
 	if err != nil {
 		s.pool.Put(hc)
@@ -153,7 +151,10 @@ func (s *DefaultHttpListener) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 func addFilter(ctx *h.HttpContext, api router.API) {
 	ctx.AppendFilterFunc(extension.GetMustFilterFunc(constant.LoggerFilter),
 		extension.GetMustFilterFunc(constant.RecoveryFilter), extension.GetMustFilterFunc(constant.TimeoutFilter))
-
+	alc := config.GetBootstrap().StaticResources.AccessLogConfig
+	if alc.Enable {
+		ctx.AppendFilterFunc(extension.GetMustFilterFunc(constant.AccessLogFilter))
+	}
 	switch api.Method.IntegrationRequest.RequestType {
 	// TODO add some basic filter for diff protocol
 	case config.DubboRequest:
@@ -167,7 +168,7 @@ func addFilter(ctx *h.HttpContext, api router.API) {
 	ctx.BuildFilters()
 
 	// load plugins
-	filterChain := plugins.GetApiFilterFuncsWithApiUrl(ctx.Request.URL.Path)
+	filterChain := plugins.GetAPIFilterFuncsWithAPIURL(ctx.Request.URL.Path)
 	ctx.AppendFilterFunc(filterChain...)
 
 	ctx.AppendFilterFunc(extension.GetMustFilterFunc(constant.ResponseFilter))

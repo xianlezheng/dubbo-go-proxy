@@ -23,59 +23,53 @@ import (
 	"github.com/dubbogo/dubbo-go-proxy/pkg/logger"
 )
 
-func main(){}
+func main() {}
 
-// Export filter
+// ExternalPluginAccess export filter
 func ExternalPluginAccess() filter.Filter {
 	return &Access{}
 }
 
-// Export filter
+// ExternalPluginBlackList export filter
 func ExternalPluginBlackList() filter.Filter {
 	return &BlackList{}
 }
 
-// Export filter
+// ExternalPluginRateLimit export filter
 func ExternalPluginRateLimit() filter.Filter {
 	return &RateLimit{}
 }
 
-/**
-	Access filter
- */
+// Access filter
 type Access struct {
-
 }
 
-func (r *Access)Do() context.FilterFunc  {
+// Do to export func(c context.Context)
+func (r *Access) Do() context.FilterFunc {
 	return func(c context.Context) {
 		logger.Info("DoAccessFilter")
 		c.Next()
 	}
 }
 
-/**
-	BlackList filter
-*/
+// BlackList filter
 type BlackList struct {
-
 }
 
-func (r *BlackList)Do() context.FilterFunc  {
+// Do to export func(c context.Context)
+func (r *BlackList) Do() context.FilterFunc {
 	return func(c context.Context) {
 		logger.Info("DoBlackListFilter")
 		c.Next()
 	}
 }
 
-/**
-	RateLimit filter
- */
+// RateLimit filter
 type RateLimit struct {
-
 }
 
-func (r *RateLimit)Do() context.FilterFunc  {
+// Do to export func(c context.Context)
+func (r *RateLimit) Do() context.FilterFunc {
 	return func(c context.Context) {
 		logger.Info("DoRateLimitFilter")
 		c.Next()

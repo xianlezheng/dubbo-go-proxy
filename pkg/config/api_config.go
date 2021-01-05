@@ -68,32 +68,32 @@ const (
 
 // APIConfig defines the data structure of the api gateway configuration
 type APIConfig struct {
-	Name        	string       	`json:"name" yaml:"name"`
-	Description 	string       	`json:"description" yaml:"description"`
-	Resources   	[]Resource   	`json:"resources" yaml:"resources"`
-	Definitions 	[]Definition 	`json:"definitions" yaml:"definitions"`
-	PluginFilePath  string 			`json:"pluginFilePath" yaml:"pluginFilePath"`
-	PluginsGroup 	[]PluginsGroup 	`json:"pluginsGroup" yaml:"pluginsGroup"`
+	Name           string         `json:"name" yaml:"name"`
+	Description    string         `json:"description" yaml:"description"`
+	Resources      []Resource     `json:"resources" yaml:"resources"`
+	Definitions    []Definition   `json:"definitions" yaml:"definitions"`
+	PluginFilePath string         `json:"pluginFilePath" yaml:"pluginFilePath"`
+	PluginsGroup   []PluginsGroup `json:"pluginsGroup" yaml:"pluginsGroup"`
 }
 
 // Plugin defines plugin details
 type Plugin struct {
-	Name 				string 	`json:"name" yaml:"name"`
-	Version 			string 	`json:"version" yaml:"version"`
-	Priority 			int 	`json:"priority" yaml:"priority"`
-	ExternalLookupName  string 	`json:"externalLookupName" yaml:"externalLookupName"`
+	Name               string `json:"name" yaml:"name"`
+	Version            string `json:"version" yaml:"version"`
+	Priority           int    `json:"priority" yaml:"priority"`
+	ExternalLookupName string `json:"externalLookupName" yaml:"externalLookupName"`
 }
 
 // PluginsGroup defines the plugins group info
 type PluginsGroup struct {
-	GroupName 		string 		`json:"groupName" yaml:"groupName"`
-	Plugins 		[]Plugin	`json:"plugins" yaml:"plugins"`
+	GroupName string   `json:"groupName" yaml:"groupName"`
+	Plugins   []Plugin `json:"plugins" yaml:"plugins"`
 }
 
 // Resource defines resources.plugins
 type PluginsInUse struct {
-	GroupNames 		[]string 	`json:"groupNames" yaml:"groupNames"`
-	PluginNames 	[]string 	`json:"pluginNames" yaml:"pluginNames"`
+	GroupNames  []string `json:"groupNames" yaml:"groupNames"`
+	PluginNames []string `json:"pluginNames" yaml:"pluginNames"`
 }
 
 // Resource defines the API path
@@ -103,7 +103,7 @@ type Resource struct {
 	Timeout     time.Duration     `json:"timeout" yaml:"timeout"`
 	Description string            `json:"description" yaml:"description"`
 	Filters     []string          `json:"filters" yaml:"filters"`
-	Plugins 	PluginsInUse 	  `json:"plugins" yaml:"plugins"`
+	Plugins     PluginsInUse      `json:"plugins" yaml:"plugins"`
 	Methods     []Method          `json:"methods" yaml:"methods"`
 	Resources   []Resource        `json:"resources,omitempty" yaml:"resources,omitempty"`
 	Headers     map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
@@ -212,7 +212,7 @@ type MappingParam struct {
 type Opt struct {
 	// Name match dubbo.DefaultMapOption key.
 	Name string `json:"name,omitempty" yaml:"name"`
-	// Open control opt create.
+	// Open control opt create, only true will create a Opt.
 	Open bool `json:"open,omitempty" yaml:"open"`
 	// Usable setTarget condition, true can set, false not set.
 	Usable bool `json:"usable,omitempty" yaml:"usable"`
@@ -228,6 +228,7 @@ type DubboBackendConfig struct {
 	Interface       string   `yaml:"interface" json:"interface"`
 	Method          string   `yaml:"method" json:"method"`
 	ParamTypes      []string `yaml:"paramTypes" json:"paramTypes"`
+	ToParamTypes    []string `yaml:"toParamTypes" json:"toParamTypes"`
 	Retries         string   `yaml:"retries" json:"retries,omitempty"`
 }
 
@@ -239,7 +240,7 @@ type HTTPBackendConfig struct {
 	// path to replace.
 	Path string `yaml:"path" json:"path,omitempty"`
 	// http protocol, http or https.
-	Scheme string `yaml:"scheme" json:"scheme,omitempty"`
+	Schema string `yaml:"schema" json:"scheme,omitempty"`
 }
 
 // Definition defines the complex json request body

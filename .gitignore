@@ -2,5 +2,4 @@
 /logs
 /.idea
 /.vscode
-/vendor
-
+pkg/registry/zookeeper-4unittest/contrib/fatjar

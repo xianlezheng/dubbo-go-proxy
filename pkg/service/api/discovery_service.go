@@ -20,19 +20,20 @@ package api
 import (
 	"errors"
 	"fmt"
-	"github.com/dubbogo/dubbo-go-proxy/pkg/filter/plugins"
+	"strings"
 )
 
 import (
 	"github.com/dubbogo/dubbo-go-proxy/pkg/common/constant"
 	"github.com/dubbogo/dubbo-go-proxy/pkg/common/extension"
 	"github.com/dubbogo/dubbo-go-proxy/pkg/config"
+	"github.com/dubbogo/dubbo-go-proxy/pkg/filter/plugins"
 	"github.com/dubbogo/dubbo-go-proxy/pkg/router"
 	"github.com/dubbogo/dubbo-go-proxy/pkg/service"
-	"strings"
 )
 
-func init() {
+// Init set api discovery local_memory service.
+func Init() {
 	extension.SetAPIDiscoveryService(constant.LocalMemoryApiDiscoveryService, NewLocalMemoryAPIDiscoveryService())
 }
 
@@ -69,9 +70,9 @@ func InitAPIsFromConfig(apiConfig config.APIConfig) error {
 		return nil
 	}
 	// load pluginsGroup
-	plugins.InitPluginsGroup(apiConfig.PluginsGroup,apiConfig.PluginFilePath)
+	plugins.InitPluginsGroup(apiConfig.PluginsGroup, apiConfig.PluginFilePath)
 	// init plugins from resource
-	plugins.InitApiUrlWithFilterChain(apiConfig.Resources)
+	plugins.InitAPIURLWithFilterChain(apiConfig.Resources)
 	return loadAPIFromResource("", apiConfig.Resources, nil, localAPIDiscSrv)
 }
 
